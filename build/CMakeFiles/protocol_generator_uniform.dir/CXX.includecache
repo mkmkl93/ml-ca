@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/michal/Documents/cellular/nasze-ca/src/protocol_generator_uniform.cpp
+algorithm
+-
+iterator
+-
+fstream
+-
+random
+-
+iostream
+-
+vector
+-
+map
+-
+set
+-
+stack
+-
+

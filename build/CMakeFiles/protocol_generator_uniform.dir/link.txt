@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -Wextra -pedantic -fopenmp   CMakeFiles/protocol_generator_uniform.dir/src/protocol_generator_uniform.cpp.o  -o protocol_generator_uniform 

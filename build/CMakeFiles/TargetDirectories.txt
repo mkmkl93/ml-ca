@@ -1,0 +1,7 @@
+/home/michal/Documents/cellular/nasze-ca/build/CMakeFiles/tests.dir
+/home/michal/Documents/cellular/nasze-ca/build/CMakeFiles/tumor.dir
+/home/michal/Documents/cellular/nasze-ca/build/CMakeFiles/protocol_generator.dir
+/home/michal/Documents/cellular/nasze-ca/build/CMakeFiles/edit_cache.dir
+/home/michal/Documents/cellular/nasze-ca/build/CMakeFiles/run-simple.dir
+/home/michal/Documents/cellular/nasze-ca/build/CMakeFiles/rebuild_cache.dir
+/home/michal/Documents/cellular/nasze-ca/build/CMakeFiles/protocol_generator_uniform.dir
