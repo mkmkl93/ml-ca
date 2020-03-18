@@ -1,26 +1,17 @@
-from keras.layers.normalization import BatchNormalization
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
-from keras.layers.core import Activation
-from keras.layers.core import Dropout
-from keras.layers.core import Dense
-from keras.layers import Flatten
-from keras.layers import Input
-from keras.models import Model
-from keras.optimizers import Adam
-from keras import callbacks
-from hparams import create_hparams
 import numpy as np
+import tensorflow as tf
+import pandas as pd
 
+from tensorflow.keras.layers import Input, Conv1D, Activation, BatchNormalization, MaxPooling1D, Flatten, Dense
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import callbacks
 from absl import flags
 from absl import app
 from datetime import datetime
 
 from data_processor import read_data
-import tensorflow as tf
-
-import pandas as pd
-
+from hparams import create_hparams
 
 def log_output(results, hparams, filepath):
     date = str(datetime.today().strftime('%Y%m%d%H%M%S'))
