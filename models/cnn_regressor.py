@@ -1,6 +1,10 @@
+import io
+import neptune
 import numpy as np
 import tensorflow as tf
 import pandas as pd
+import matplotlib.pyplot as plt
+import neptune_tensorboard as neptune_tb
 
 from tensorflow.keras.layers import Input, Conv1D, Activation, BatchNormalization, MaxPooling1D, Flatten, Dense
 from tensorflow.keras.models import Model
@@ -13,6 +17,17 @@ from datetime import datetime
 from data_processor import read_data
 from hparams import create_hparams
 
+
+def create_loss_figure(model, x, y):
+    x_axis = np.arange(len(x))
+    y_hat = model.predict(x)
+    figure = plt.figure(figsize=(20, 10))
+    plt.plot(x_axis, y_hat, 'r', label='predcited value')
+    plt.plot(x_axis, y, 'b', label='actual value')
+    plt.legend()
+    return figure
+
+
 def log_output(results, hparams, filepath):
     date = str(datetime.today().strftime('%Y%m%d%H%M%S'))
     filename = filepath + 'cnn_regressor_' + str(np.min(results['loss'])) + '_' + date + '.log'
@@ -20,6 +35,10 @@ def log_output(results, hparams, filepath):
         f.write(str(hparams))
         f.write('\n\n')
         f.write(str(results))
+
+
+def neptune_logs(figure):
+    neptune.send_image("Loss on validation sample", figure)
 
 
 def input_fn(trainingset_path):
@@ -64,35 +83,43 @@ def create_cnn(width, height, filters, dropout, activation, kernel_size):
 
 
 def train_and_eval(hparams, trainingset_path, model_path):
-    path = model_path + "/" + id_from_hp(hparams)
+    path = model_path + id_from_hp(hparams)
 
-    x_train, y_train, x_eval, y_eval = input_fn(trainingset_path)
+    neptune.init(project_qualified_name='mkmkl93/ZPP-OLN')
+    with neptune.create_experiment(name="Convolutional fully connected",
+                                   params=hparams,
+                                   tags=["CNN", "random", "150k_uniform"]):
+        x_train, y_train, x_eval, y_eval = input_fn(trainingset_path)
 
-    model = create_cnn(x_train.shape[1], 1,
-                       filters=hparams["cnn_filters"],
-                       dropout=hparams["dropout"],
-                       activation=hparams["activation"],
-                       kernel_size=hparams["kernel_size"]
-                       )
-    opt = Adam(lr=hparams["learning_rate"],
-               decay=1e-3 / 200)
-    model.compile(loss="mean_squared_error", optimizer=opt)
+        model = create_cnn(x_train.shape[1], 1,
+                           filters=hparams["cnn_filters"],
+                           dropout=hparams["dropout"],
+                           activation=hparams["activation"],
+                           kernel_size=hparams["kernel_size"]
+                           )
+        opt = Adam(lr=hparams["learning_rate"],
+                   decay=1e-3 / 200)
+        model.compile(loss="mean_squared_error", optimizer=opt)
 
-    tbCallBack = callbacks.TensorBoard(
-        log_dir=path, histogram_freq=1,
-        write_graph=True, write_images=True)
+        tbCallBack = callbacks.TensorBoard(
+            log_dir=path, histogram_freq=1,
+            write_graph=True, write_images=True)
 
-    history_callback = model.fit(
-        x_train,
-        y_train,
-        validation_data=(x_eval, y_eval),
-        epochs=hparams["num_epochs"],
-        batch_size=hparams["batch_size"],
-        callbacks=[tbCallBack])
+        history_callback = model.fit(
+            x_train,
+            y_train,
+            validation_data=(x_eval, y_eval),
+            epochs=hparams["num_epochs"],
+            batch_size=hparams["batch_size"],
+            callbacks=[tbCallBack])
 
-    loss_history = history_callback.history
+        loss_history = history_callback.history
 
-    log_output(loss_history, hparams, path)
+        numOfExamples = 100
+        figure = create_loss_figure(model, x_eval[:numOfExamples], y_eval[:numOfExamples])
+
+        neptune_logs(figure)
+        log_output(loss_history, hparams, path)
 
 
 def id_from_hp(hp):
@@ -101,13 +128,14 @@ def id_from_hp(hp):
 
 
 def main():
-    HP_NUM_FILTERS = [[64, 64, 64, 64]]
+    neptune_tb.integrate_with_tensorflow()
+    HP_NUM_FILTERS = [[32]]
     HP_DROPOUT = [0.0]
-    HP_LEARNING_RATE = [0.0005]
+    HP_LEARNING_RATE = [0.001]
     HP_ACTIVATION = ['relu']
     HP_KERNEL_SIZE = [9]
     hparams = create_hparams()
-    hparams["num_epochs"] = 2
+    hparams["num_epochs"] = 1
     session_num = 0
     for filters in HP_NUM_FILTERS:
         for dropout_rate in HP_DROPOUT:
