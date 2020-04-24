@@ -196,9 +196,6 @@ int main() {
             }
             f << '\n';
             t << '\n';
-        } else {
-            // Nic nie znalazło, więc szukamy dalej
-            i--;
         }
     }
     return 0;

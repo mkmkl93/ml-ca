@@ -61,3 +61,4 @@ add_executable(protocol_generator_uniform
 		)
 
 target_link_libraries(tumor stdc++fs)
+target_link_libraries(protocol_generator_uniform stdc++fs)

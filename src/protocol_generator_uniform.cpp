@@ -7,6 +7,8 @@
 #include <map>
 #include <set>
 #include <stack>
+#include <experimental/filesystem>
+#include <cstring>
 
 #define MAX_GY 10.0
 #define MIN_GY 0.75
@@ -19,13 +21,16 @@ struct DataFrame {
 };
 
 typedef std::map<float, std::vector<std::vector<float>>> protocol_sum;
+namespace fs = std::experimental::filesystem;
 
-int main() {
+int main(int argc, char **argv) {
   	protocol_sum protocol_map;
   	std::vector<int> pref_sum;
 	int ways = 0, oldWays = 0;
+    (void) oldWays; (void) argc;
+
 	for (float target = MAX_GY; target >= MIN_GY; target -= GRANULATION_GY) {
-		std::stack<DataFrame> s;
+	    std::stack<DataFrame> s;
 		std::vector<float> max_doses;
 		for (float max_dose = MIN_RADIATION_GY; max_dose <= MAX_GY; max_dose += GRANULATION_GY) {
 			max_doses.push_back(max_dose);
@@ -52,7 +57,7 @@ int main() {
 			d.avail_coins.pop_back();
 			s.push(d);
 		}
-//		std::cout << target << ":" << ways << " " << ways - oldWays << "\n";
+		// std::cout << target << ":" << ways << " " << ways - oldWays << "\n";
 		oldWays = ways;
 		protocol_map[target] = chosen_protocols;
         pref_sum.emplace_back(ways);
@@ -69,43 +74,61 @@ int main() {
 
 	std::set<std::vector<float>> protocol_set;
 
+	fs::path directory_path(argv[0]);
+    directory_path.remove_filename();
+    directory_path += "../resources/protocols/uniform_200k/";
+    if (!fs::exists(directory_path)) {
+        fs::create_directory(directory_path);
+    } else if (!fs::is_directory(directory_path)) {
+        std::cerr << "No directory\n";
+        return 1;
+    }
+
 	std::random_device rd;
 	std::mt19937 rng;
-	rng.seed(rd());
+	rng.seed(42);
 	std::uniform_int_distribution<int> dist_ways(1, ways);
-	int i = 0;
-	std::ofstream f("protocol_list_1.csv");
-	std::ofstream t("protocol_times_1.csv");
-	int file_count = 1;
+	int i = 0, file_count = 1;
+
+    directory_path.replace_filename("protocol_list_1.csv");
+	std::ofstream f(directory_path);
+	directory_path.replace_filename("protocol_times_1.csv");
+    std::ofstream t(directory_path);
+	std::cout << "Started processing file 1\n";
+
+	if (!f.is_open()) {
+	    std::cerr << "Couldn't open files 1 " << strerror(errno) << "\n";
+	    return 1;
+	}
+
 	// Liczba protokołów
-	while (i < 10) {
-		// Ile linii na jeden plik: 50000 / 32 = 1562.5 ~ 1570,
+	while (i < 200000) {
+		// Ile linii na jeden plik: 200000 / 32 = 6250,
 		// po przekroczeniu tego otwieramy kolejny plik
-		if (i > file_count * 1570) {
+		if (i >= file_count * 6250) {
 			file_count++;
+			std::cout << "Started processing file " << file_count << "\n";
 			f.close();
 			t.close();
-			f.open("protocol_list_" + std::to_string(file_count) + ".csv");
-			t.open("protocol_times_" + std::to_string(file_count) + ".csv");
+            directory_path.replace_filename("protocol_list_" + std::to_string(file_count) + ".csv");
+			f.open(directory_path);
+            directory_path.replace_filename("protocol_times_" + std::to_string(file_count) + ".csv");
+			t.open(directory_path);
 		}
+
 		// Losuj numer protokołu
 		int protocol_number = dist_ways(rng);
         float sum = MAX_GY - (lower_bound(pref_sum.begin(), pref_sum.end(), protocol_number) - pref_sum.begin()) * GRANULATION_GY;
 
 		std::vector<float> temp_protocol;
 
-		std::cout << "Suma " << sum << "\n";
-		std::cout << "Rozmiar " << protocol_map[sum].size() << "\n";
 		// Losuj pozycję
 		std::uniform_int_distribution<int> dist_pos(0, protocol_map[sum].size() - 1);
 		int temp_pos = dist_pos(rng);
-		std::cout << "Poz " << temp_pos << "\n";
 
 		temp_protocol = (protocol_map[sum])[temp_pos];
 
 		int temp_protocol_length = temp_protocol.size();
-
-		//std::cout << "Dlugosc " << temp_protocol_length << "\n";
 
 		std::sort(temp_protocol.begin(), temp_protocol.begin() + temp_protocol_length);
 
@@ -114,10 +137,8 @@ int main() {
 
 		// Zapisz jeśli nie było powtórek
 		if (protocol_set.find(temp_protocol) == protocol_set.end()) {
-			std::cout << "Zapis.\n";
 			protocol_set.insert(temp_protocol);
-			i++;
-			std::cout << i << "...\n";
+			i += 2;
 
 			// Losuj 2 czasy
 			// _doses_slots_ kroków symulacji co 6 sekund
@@ -135,12 +156,12 @@ int main() {
 			int doses_slots = 720;
 			int doses_multiply = 72000 / doses_slots;
 			int doses_min_interval = 3;
-//
+
 			while (time_length < temp_protocol_length) {
 				std::uniform_int_distribution<int> dist_time(1, doses_slots);
 				int temp_time = dist_time(rng);
 				bool good_time = true;
-				for (int t = 0; t < random_time_1.size(); ++t) {
+				for (int t = 0; t < (int)random_time_1.size(); ++t) {
 					if ((std::abs(random_time_1[t] - doses_multiply*temp_time)) < doses_multiply*doses_min_interval) {
 						good_time = false;
 					}
@@ -150,14 +171,14 @@ int main() {
 					time_length++;
 				}
 			}
-//
+
 			time_length = 0;
 
 			while (time_length < temp_protocol_length) {
 				std::uniform_int_distribution<int> dist_time(1, doses_slots);
 				int temp_time = dist_time(rng);
 				bool good_time = true;
-				for (int t = 0; t < random_time_2.size(); ++t) {
+				for (int t = 0; t < (int)random_time_2.size(); ++t) {
 					if ((std::abs(random_time_2[t] - doses_multiply*temp_time)) < doses_multiply*doses_min_interval) {
 						good_time = false;
 					}
@@ -168,12 +189,8 @@ int main() {
 				}
 			}
 
-			std::cout << "Good times.\n";
-
 			std::sort(random_time_1.begin(), random_time_1.begin() + temp_protocol_length);
 			std::sort(random_time_2.begin(), random_time_2.begin() + temp_protocol_length);
-
-
 
 			for (std::vector<float>::const_iterator val = temp_protocol.begin();
 				val != temp_protocol.end(); ++val) {
@@ -199,9 +216,6 @@ int main() {
 			}
 			f << '\n';
 			t << '\n';
-		} else {
-            // Nic nie znalazło, więc szukamy dalej
-            i--;
 		}
 	}
     return 0;

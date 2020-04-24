@@ -32,9 +32,14 @@
 *.app
 
 # IDE
+build
 .vs
 .idea
+.vscode
 cmake-build-debug
 
 # Logs
-logs/*
+models/__pycache__
+models/logs
+logs
+.ipynb_checkpoints
