@@ -10,7 +10,7 @@ from absl import flags
 from absl import app
 from tqdm import tqdm
 
-flags.DEFINE_string('protocol_path', 'data/uniform_150k/', 'Set a value for data source folder.')
+flags.DEFINE_string('protocol_path', 'data/old_data/', 'Set a value for data source folder.')
 flags.DEFINE_string('dataset_path', 'data/', 'Set a value for data destination folder.')
 flags.DEFINE_integer('from_file', 1, 'Set a starting point for data processor.')
 flags.DEFINE_integer('to_file', 33, 'Set an ending point for data processor.')
