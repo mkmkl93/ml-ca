@@ -35,3 +35,6 @@
 .vs
 .idea
 cmake-build-debug
+
+# Logs
+logs/*
