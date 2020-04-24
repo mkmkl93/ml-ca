@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import neptune_tensorboard as neptune_tb
 
-from tensorflow.keras.layers import Input, Conv1D, Activation, BatchNormalization, MaxPooling1D, Flatten, Dense
+from tensorflow.keras.layers import Input, Conv1D, Activation, BatchNormalization, MaxPooling1D, Flatten, Dense, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import callbacks
@@ -15,7 +15,6 @@ from absl import app
 from datetime import datetime
 
 from data_processor import read_data
-from hparams import create_hparams
 
 
 def create_loss_figure(model, x, y):
@@ -85,10 +84,10 @@ def create_cnn(width, height, filters, dropout, activation, kernel_size):
 def train_and_eval(hparams, trainingset_path, model_path):
     path = model_path + id_from_hp(hparams)
 
-    neptune.init(project_qualified_name='mkmkl93/ZPP-OLN')
+    neptune.init(project_qualified_name='kowson/OLN')
     with neptune.create_experiment(name="Convolutional fully connected",
                                    params=hparams,
-                                   tags=["CNN", "random", "150k_uniform"]):
+                                   tags=["CNN", "random", "150k_uniform", "1000_epochs"]):
         x_train, y_train, x_eval, y_eval = input_fn(trainingset_path)
 
         model = create_cnn(x_train.shape[1], 1,
@@ -129,13 +128,23 @@ def id_from_hp(hp):
 
 def main():
     neptune_tb.integrate_with_tensorflow()
-    HP_NUM_FILTERS = [[32]]
-    HP_DROPOUT = [0.0]
-    HP_LEARNING_RATE = [0.001]
-    HP_ACTIVATION = ['relu']
-    HP_KERNEL_SIZE = [9]
-    hparams = create_hparams()
-    hparams["num_epochs"] = 1
+    HP_NUM_FILTERS = [[32,32,32,32], [128, 128, 64, 32, 32], [256, 256, 256, 256, 256]] 
+    HP_DROPOUT = [0.0, 0.5, 0.1]
+    HP_LEARNING_RATE = [0.0005, 0.001, 0.0001]
+    HP_ACTIVATION = ['relu', 'tanh']
+    HP_KERNEL_SIZE = [9, 11]
+    hparams = { "num_epochs"                    : 1000,
+                "shuffle"                       : False,
+                "num_threads"                   : 2,
+                "batch_size"                    : 16384,
+                "hidden_size"                   : 256,
+                "hidden_units"                  : [512, 1024, 512, 256],
+                "num_hidden_layers"             : 4,
+                "initializer"                   : "uniform_unit_scaling",
+                "initializer_gain"              : 1.0,
+                "weight_decay"                  : 0.0,
+                "l1_regularization_strength"    : 0.001
+            }
     session_num = 0
     for filters in HP_NUM_FILTERS:
         for dropout_rate in HP_DROPOUT:
