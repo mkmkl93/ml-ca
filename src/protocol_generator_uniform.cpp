@@ -23,6 +23,15 @@ struct DataFrame {
 typedef std::map<float, std::vector<std::vector<float>>> protocol_sum;
 namespace fs = std::experimental::filesystem;
 
+void check_directory(fs::path dirPath) {
+	if (!fs::exists(dirPath)) {
+        fs::create_directory(dirPath);
+    } else if (!fs::is_directory(dirPath)) {
+        std::cerr << "No directory\n";
+        exit(1);
+    }
+}
+
 int main(int argc, char **argv) {
   	protocol_sum protocol_map;
   	std::vector<int> pref_sum;
@@ -76,13 +85,10 @@ int main(int argc, char **argv) {
 
 	fs::path directory_path(argv[0]);
     directory_path.remove_filename();
-    directory_path += "../resources/protocols/uniform_200k/";
-    if (!fs::exists(directory_path)) {
-        fs::create_directory(directory_path);
-    } else if (!fs::is_directory(directory_path)) {
-        std::cerr << "No directory\n";
-        return 1;
-    }
+    directory_path += "../data/uniform_200k/";
+    check_directory(directory_path);
+	directory_path += "protocols/";
+	check_directory(directory_path);
 
 	std::random_device rd;
 	std::mt19937 rng;

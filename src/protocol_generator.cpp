@@ -72,8 +72,8 @@ int main() {
 	rng.seed(42);
 	std::uniform_int_distribution<int> dist_sum(MIN_GY / GRANULATION_GY, MAX_GY / GRANULATION_GY);
 	int i = 0;
-    std::ofstream f("resources/protocols/data/protocol_list_1.csv");
-    std::ofstream t("resources/protocols/data/protocol_times_1.csv");
+    std::ofstream f("../data/old_data/protocols/protocol_list_1.csv");
+    std::ofstream t("../data/old_data/protocols/protocol_times_1.csv");
     int file_count = 1;
     // Liczba protokołów
     while (i < 50000) {
@@ -83,8 +83,8 @@ int main() {
             file_count++;
             f.close();
             t.close();
-            f.open("resources/protocols/data/protocol_list_" + std::to_string(file_count) + ".csv");
-            t.open("resources/protocols/data/protocol_times_" + std::to_string(file_count) + ".csv");
+            f.open("../data/old_data/protocols/protocol_list_" + std::to_string(file_count) + ".csv");
+            t.open("../data/old_data/protocols/protocol_times_" + std::to_string(file_count) + ".csv");
         }
         // Losuj sumę - od 0.75 do 10.00
         float sum = dist_sum(rng) * GRANULATION_GY;
