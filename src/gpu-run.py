@@ -20,10 +20,11 @@ with open(os.path.join(dataDirPath, "protocol_times_{}.csv".format(sys.argv[1]))
 		times.pop()
 		for i, j in enumerate (doses):
 			print(i, j)
-			protocol += (doses[i], times[i])
-		protocols += protocol
+			protocol.append((int(times[i]), float(doses[i])))
+		protocols.append(protocol)
 		break
-	pass
+
+print(protocols)
 
 experiment = sim.Experiment(params, [state] * len(protocols), 200, len(protocols))  
 
