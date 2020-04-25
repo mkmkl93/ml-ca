@@ -43,3 +43,7 @@ models/__pycache__
 models/logs
 logs
 .ipynb_checkpoints
+
+# Protocols
+data/*/protocols
+data/*/results

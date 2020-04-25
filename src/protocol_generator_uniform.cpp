@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 
 	std::random_device rd;
 	std::mt19937 rng;
-	rng.seed(42);
+	rng.seed(43);
 	std::uniform_int_distribution<int> dist_ways(1, ways);
 	int i = 0, file_count = 1;
 
@@ -107,9 +107,9 @@ int main(int argc, char **argv) {
 
 	// Liczba protokołów
 	while (i < 200000) {
-		// Ile linii na jeden plik: 200000 / 32 = 6250,
+		// Ile plików: 200000 / 1440 ~ 139,
 		// po przekroczeniu tego otwieramy kolejny plik
-		if (i >= file_count * 6250) {
+		if (i >= file_count * 1440) {
 			file_count++;
 			std::cout << "Started processing file " << file_count << "\n";
 			t.close();
