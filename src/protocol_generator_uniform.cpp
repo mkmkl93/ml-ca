@@ -96,14 +96,12 @@ int main(int argc, char **argv) {
 	std::uniform_int_distribution<int> dist_ways(1, ways);
 	int i = 0, file_count = 1;
 
-    directory_path.replace_filename("protocol_list_1.csv");
-	std::ofstream f(directory_path);
 	directory_path.replace_filename("protocol_times_1.csv");
     std::ofstream t(directory_path);
 	std::cout << "Started processing file 1\n";
 
-	if (!f.is_open()) {
-	    std::cerr << "Couldn't open files 1 " << strerror(errno) << "\n";
+	if (!t.is_open()) {
+	    std::cerr << "Couldn't open file 1 " << strerror(errno) << "\n";
 	    return 1;
 	}
 
@@ -114,10 +112,7 @@ int main(int argc, char **argv) {
 		if (i >= file_count * 6250) {
 			file_count++;
 			std::cout << "Started processing file " << file_count << "\n";
-			f.close();
 			t.close();
-            directory_path.replace_filename("protocol_list_" + std::to_string(file_count) + ".csv");
-			f.open(directory_path);
             directory_path.replace_filename("protocol_times_" + std::to_string(file_count) + ".csv");
 			t.open(directory_path);
 		}
@@ -205,10 +200,8 @@ int main(int argc, char **argv) {
 			t << '\n';
 			for (std::vector<int>::const_iterator val = random_time_1.begin();
 				val != random_time_1.end(); ++val) {
-					f << *val << ' ';
 					t << *val << ' ';
 			}
-			f << '\n';
 			t << '\n';
 			for (std::vector<float>::const_iterator val = temp_protocol.begin();
 				val != temp_protocol.end(); ++val) {
@@ -217,10 +210,8 @@ int main(int argc, char **argv) {
 			t << '\n';
 			for (std::vector<int>::const_iterator val = random_time_2.begin();
 				val != random_time_2.end(); ++val) {
-					f << *val << ' ';
 					t << *val << ' ';
 			}
-			f << '\n';
 			t << '\n';
 		}
 	}
