@@ -10,10 +10,10 @@ from absl import flags
 from absl import app
 from tqdm import tqdm
 
-flags.DEFINE_string('protocol_path', 'data/old_data/', 'Set a value for data source folder.')
-flags.DEFINE_string('dataset_path', 'data/', 'Set a value for data destination folder.')
+flags.DEFINE_string('protocol_path', 'data/uniform_200k/', 'Set a value for data source folder.')
+flags.DEFINE_string('dataset_path', 'data/uniform_200k/', 'Set a value for data destination folder.')
 flags.DEFINE_integer('from_file', 1, 'Set a starting point for data processor.')
-flags.DEFINE_integer('to_file', 33, 'Set an ending point for data processor.')
+flags.DEFINE_integer('to_file', 9, 'Set an ending point for data processor.')
 flags.DEFINE_boolean('concat_raw_data', True, 'Whether to read raw outputs first'
   'and only then preprocess for training')
 
@@ -22,12 +22,10 @@ FLAGS = flags.FLAGS
 
 def process_protocols(path, from_file, to_file):
     all_proto = pd.DataFrame(0, index=[], columns=[i for i in range(0, 40)])
-    extension = 'csv'
     row_i = 0
     print("Processing protocols")
     for i in range(from_file, to_file):
-        all_filenames = [i for i in glob.glob(path + str(i) 
-        	+ '/protocols/*.{}'.format(extension))]
+        all_filenames = [i for i in glob.glob(path + 'protocols/*.csv')]
         for f in tqdm(all_filenames, desc=str(i), ncols=100):
             temp = pd.read_csv(f, header=None)
             to_fill = (20 - temp.shape[1]) * 2  # fill first values with zeros
@@ -42,12 +40,10 @@ def process_protocols(path, from_file, to_file):
 def process_alive_counts(path, from_file, to_file):
     #'generated_final_good/data/data/'
     all_count = pd.DataFrame(0, index=[], columns=[0])
-    extension = 'csv'
     row_i = 0
     print("Processing alive count")
     for i in range(from_file, to_file):
-        all_filenames = [i for i in glob.glob(path + str(i) 
-        	+ '/aliveCount/*.{}'.format(extension))]
+        all_filenames = [i for i in glob.glob(path + '/results/*.csv')]
         for f in tqdm(all_filenames, desc=str(i), ncols=100):
             temp = pd.read_csv(f)
             col_i = 0
