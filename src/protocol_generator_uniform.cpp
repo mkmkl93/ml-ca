@@ -84,9 +84,9 @@ int main(int argc, char **argv) {
 	std::set<std::vector<float>> protocol_set;
 
 	fs::path directory_path(argv[0]);
-    directory_path.remove_filename();
-    directory_path += "../data/uniform_200k/";
-    check_directory(directory_path);
+	directory_path.remove_filename();
+	directory_path += "../data/uniform_200k/";
+	check_directory(directory_path);
 	directory_path += "protocols/";
 	check_directory(directory_path);
 
@@ -94,32 +94,25 @@ int main(int argc, char **argv) {
 	std::mt19937 rng;
 	rng.seed(43);
 	std::uniform_int_distribution<int> dist_ways(1, ways);
-	int i = 0, file_count = 1;
+	std::ofstream t;
 
-	directory_path.replace_filename("protocol_times_1.csv");
-    std::ofstream t(directory_path);
-	std::cout << "Started processing file 1\n";
-
-	if (!t.is_open()) {
-	    std::cerr << "Couldn't open file 1 " << strerror(errno) << "\n";
-	    return 1;
-	}
-
-	// Liczba protokołów
-	while (i < 200000) {
-		// Ile plików: 200000 / 1440 ~ 139,
-		// po przekroczeniu tego otwieramy kolejny plik
-		if (i >= file_count * 1440) {
+	int i = 0, file_count = 0;
+	int numOfFiles = 8, numOfProtocols = 10000;
+	int protPerFile = (numOfProtocols + numOfFiles - 1) / numOfFiles; // Ceiling of numOfProtocls / numOfFile
+	std :: cout << "Number of files: " << numOfFiles << "\n";
+	std :: cout << "Number of protocols: " << numOfProtocols << "\n";
+	while (i < numOfProtocols) {
+		if (i % protPerFile == 0) {
 			file_count++;
 			std::cout << "Started processing file " << file_count << "\n";
 			t.close();
-            directory_path.replace_filename("protocol_times_" + std::to_string(file_count) + ".csv");
+			directory_path.replace_filename("protocol_times_" + std::to_string(file_count) + ".csv");
 			t.open(directory_path);
 		}
 
 		// Losuj numer protokołu
 		int protocol_number = dist_ways(rng);
-        float sum = MAX_GY - (lower_bound(pref_sum.begin(), pref_sum.end(), protocol_number) - pref_sum.begin()) * GRANULATION_GY;
+		float sum = MAX_GY - (lower_bound(pref_sum.begin(), pref_sum.end(), protocol_number) - pref_sum.begin()) * GRANULATION_GY;
 
 		std::vector<float> temp_protocol;
 
@@ -215,5 +208,8 @@ int main(int argc, char **argv) {
 			t << '\n';
 		}
 	}
-    return 0;
+
+	t.close();
+	
+	return 0;
 }

@@ -26,8 +26,6 @@ protocols = []
 with open(protocolTimes, 'r') as f:
 	for doses, times in itertools.zip_longest(f, f):
 		protocol = []
-		doses = "0.625 0.625 0.875 0.75 2 0.75 0.875 0.875 1 0.875 0.75\n"
-		times = "2300 10100 18000 22700 34300 36700 40600 45900 50100 64500 65400\n"
 		doses = doses.split(' ')
 		times = times.split(' ')
 		doses.pop()
@@ -36,13 +34,11 @@ with open(protocolTimes, 'r') as f:
 			protocol.append((int(times[i]), float(doses[i])))
 		protocols.append(protocol)
 	
-		for j in range(1, 1000):
-			experiment = sim.Experiment(params, [state] * len(protocols), 1, len(protocols))
-			experiment.run(protocols)
-			res = experiment.get_results()
+	experiment = sim.Experiment(params, [state], 100, len(protocols))
+	experiment.run(protocols)
+	res = experiment.get_results()
 
-			with open(protocolResults, 'a') as f:
-				for i in res:
-					f.write(str(i))
-					f.write("\n")
-		break
+	with open(protocolResults, 'a') as g:
+		for i in res:
+			g.write(str(np.mean(i)))
+			g.write("\n")
