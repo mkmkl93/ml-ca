@@ -17,7 +17,7 @@ params = sim.load_parameters(parameters)
 state = sim.load_state(tumor, params)
 
 if not os.path.exists(results):
-    os.makedirs(results)
+	os.makedirs(results)
 
 if os.path.exists(protocolResults):
 	os.remove(protocolResults)
@@ -25,6 +25,8 @@ if os.path.exists(protocolResults):
 protocols = []
 with open(protocolTimes, 'r') as f:
 	for doses, times in itertools.zip_longest(f, f):
+		if times is None:
+			break
 		protocol = []
 		doses = doses.split(' ')
 		times = times.split(' ')
@@ -34,11 +36,14 @@ with open(protocolTimes, 'r') as f:
 			protocol.append((int(times[i]), float(doses[i])))
 		protocols.append(protocol)
 	
-	experiment = sim.Experiment(params, [state], 100, len(protocols))
-	experiment.run(protocols)
-	res = experiment.get_results()
+		if len(protocols) >= 10:
+			experiment = sim.Experiment(params, [state], 100, len(protocols))
+			experiment.run(protocols)
+			res = experiment.get_results()
 
-	with open(protocolResults, 'a') as g:
-		for i in res:
-			g.write(str(np.mean(i)))
-			g.write("\n")
+			with open(protocolResults, 'a') as g:
+				for i in res:
+					g.write(str(np.mean(i)))
+					g.write("\n")
+
+			protocols = []

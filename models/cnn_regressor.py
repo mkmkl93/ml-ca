@@ -87,7 +87,7 @@ def train_and_eval(hparams, trainingset_path, model_path):
     neptune.init(project_qualified_name='kowson/OLN')
     with neptune.create_experiment(name="Convolutional fully connected",
                                    params=hparams,
-                                   tags=["CNN", "random", "150k_uniform", "1000_epochs"]):
+                                   tags=["CNN", "grid", "10k_uniform", "1000_epochs", "data_v2", "mse"]):
         x_train, y_train, x_eval, y_eval = input_fn(trainingset_path)
 
         model = create_cnn(x_train.shape[1], 1,
@@ -98,7 +98,7 @@ def train_and_eval(hparams, trainingset_path, model_path):
                            )
         opt = Adam(lr=hparams["learning_rate"],
                    decay=1e-3 / 200)
-        model.compile(loss="mean_squared_error", optimizer=opt)
+        model.compile(loss=tf.keras.losses.MeanSquaredError(), optimizer=opt)
 
         tbCallBack = callbacks.TensorBoard(
             log_dir=path, histogram_freq=1,
@@ -118,6 +118,7 @@ def train_and_eval(hparams, trainingset_path, model_path):
         figure = create_loss_figure(model, x_eval[:numOfExamples], y_eval[:numOfExamples])
 
         neptune_logs(figure)
+        plt.close(figure)
         log_output(loss_history, hparams, path)
 
 
@@ -128,11 +129,11 @@ def id_from_hp(hp):
 
 def main():
     neptune_tb.integrate_with_tensorflow()
-    HP_NUM_FILTERS = [[32,32,32,32], [128, 128, 64, 32, 32], [256, 256, 256, 256, 256]] 
-    HP_DROPOUT = [0.0, 0.5, 0.1]
-    HP_LEARNING_RATE = [0.0005, 0.001, 0.0001]
+    HP_NUM_FILTERS = [[32,32,32,32], [128, 128, 64, 32, 32]] 
+    HP_DROPOUT = [0.1, 0.2, 0.5]
+    HP_LEARNING_RATE = [0.0005, 0.0001]
     HP_ACTIVATION = ['relu', 'tanh']
-    HP_KERNEL_SIZE = [9, 11]
+    HP_KERNEL_SIZE = [9]
     hparams = { "num_epochs"                    : 1000,
                 "shuffle"                       : False,
                 "num_threads"                   : 2,
@@ -160,7 +161,7 @@ def main():
                         print('--- Starting trial: %s' % run_name)
                         print(str(hparams))
                         session_num += 1
-                        train_and_eval(hparams, '../data/', '../logs/')
+                        train_and_eval(hparams, '../data/uniform_200k/', '../logs/')
 
 
 if __name__ == '__main__':

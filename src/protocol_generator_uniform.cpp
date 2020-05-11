@@ -96,16 +96,19 @@ int main(int argc, char **argv) {
 	std::uniform_int_distribution<int> dist_ways(1, ways);
 	std::ofstream t;
 
-	int i = 0, file_count = 0;
-	int numOfFiles = 8, numOfProtocols = 10000;
-	int protPerFile = (numOfProtocols + numOfFiles - 1) / numOfFiles; // Ceiling of numOfProtocls / numOfFile
+	int i = 0, file_count = 1, lastIndex = 0;
+	int numOfFiles = 200, numOfProtocols = 200000;
+	int protPerFile = numOfProtocols / numOfFiles;
 	std :: cout << "Number of files: " << numOfFiles << "\n";
 	std :: cout << "Number of protocols: " << numOfProtocols << "\n";
 	while (i < numOfProtocols) {
 		if (i % protPerFile == 0) {
-			file_count++;
-			std::cout << "Started processing file " << file_count << "\n";
-			t.close();
+			if (i > 0) {
+				std::cout << "Ended processing file " << file_count << " with " << i - lastIndex << " protocols\n";
+				file_count++;
+				t.close();
+			}
+			lastIndex = i;
 			directory_path.replace_filename("protocol_times_" + std::to_string(file_count) + ".csv");
 			t.open(directory_path);
 		}
