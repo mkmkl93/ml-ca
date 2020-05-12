@@ -57,8 +57,13 @@ add_executable(protocol_generator
         )
 
 add_executable(protocol_generator_uniform
-		src/protocol_generator_uniform.cpp
-		)
+	src/protocol_generator_uniform.cpp
+	)
+
+add_executable(protocol_generator_10Gy
+	src/protocol_generator_10Gy.cpp
+	)
 
 target_link_libraries(tumor stdc++fs)
 target_link_libraries(protocol_generator_uniform stdc++fs)
+target_link_libraries(protocol_generator_10Gy stdc++fs)

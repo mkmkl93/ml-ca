@@ -6,7 +6,7 @@ import itertools
 
 dirPath		= os.path.dirname(sys.argv[0])
 EMTDataDirPath	= os.path.join(dirPath, "../../EMT6-Ro/data/")
-dataDirPath	= os.path.join(dirPath, "../data/uniform_200k/")
+dataDirPath	= os.path.join(dirPath, "../data/only_10Gy/")
 results		= os.path.join(dataDirPath, "results")
 protocolTimes	= os.path.join(dataDirPath, "protocols/protocol_times_{}.csv".format(sys.argv[1]))
 protocolResults	= os.path.join(dataDirPath, "results/protocol_results_{}.csv".format(sys.argv[1]))
