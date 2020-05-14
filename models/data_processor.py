@@ -14,7 +14,7 @@ rootDir = os.path.dirname(sys.argv[0])
 flags.DEFINE_string('protocol_path', os.path.join(rootDir, '../data/uniform_200k/'), 'Set a value for data source folder.')
 flags.DEFINE_string('dataset_path', os.path.join(rootDir, '../data/uniform_200k/'), 'Set a value for data destination folder.')
 flags.DEFINE_integer('from_file', 1, 'Set a starting point for data processor.')
-flags.DEFINE_integer('to_file', 8, 'Set an ending point for data processor.')
+flags.DEFINE_integer('to_file', 200, 'Set an ending point for data processor.')
 flags.DEFINE_boolean('concat_raw_data', True, 'Whether to read raw outputs first'
                                               'and only then preprocess for training')
 
