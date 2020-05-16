@@ -4,14 +4,14 @@ import sys
 import os
 import itertools
 
-dirPath		= os.path.dirname(sys.argv[0])
+dirPath			= os.path.dirname(sys.argv[0])
 EMTDataDirPath	= os.path.join(dirPath, "../../EMT6-Ro/data/")
-dataDirPath	= os.path.join(dirPath, "../data/only_10Gy/")
-results		= os.path.join(dataDirPath, "results")
+dataDirPath		= os.path.join(dirPath, "../data/only_10Gy/")
+results			= os.path.join(dataDirPath, "results")
 protocolTimes	= os.path.join(dataDirPath, "protocols/protocol_times_{}.csv".format(sys.argv[1]))
 protocolResults	= os.path.join(dataDirPath, "results/protocol_results_{}.csv".format(sys.argv[1]))
-parameters	= os.path.join(EMTDataDirPath, "default-parameters.json")
-tumor		= os.path.join(EMTDataDirPath, "tumor-lib/tumor-1.txt")
+parameters		= os.path.join(EMTDataDirPath, "default-parameters.json")
+tumor			= os.path.join(EMTDataDirPath, "tumor-lib/tumor-1.txt")
 
 params = sim.load_parameters(parameters)
 state = sim.load_state(tumor, params)

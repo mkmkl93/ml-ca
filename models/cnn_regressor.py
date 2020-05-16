@@ -1,5 +1,6 @@
 import io
 import neptune
+import sys
 import numpy as np
 import tensorflow as tf
 import pandas as pd
@@ -13,9 +14,16 @@ from tensorflow.keras import callbacks
 from absl import flags
 from absl import app
 from datetime import datetime
-
+from absl import flags
 from data_processor import read_data
 
+flags.DEFINE_list('filters', [32,32,32], 'Set list of CNN filters')
+flags.DEFINE_float('dropout', 0.1, 'Set dropout')
+flags.DEFINE_float('learning_rate', 0.0001, 'Set learning rate')
+flags.DEFINE_string('activation', 'relu', 'Set activation method')
+flags.DEFINE_string('data_dir', '../data/uniform_200k/', 'Relative path to the data folder')
+flags.DEFINE_integer('epochs', 1000, 'Number of epochs')
+FLAGS = flags.FLAGS
 
 def create_loss_figure(model, x, y):
     x_axis = np.arange(len(x))
@@ -127,15 +135,9 @@ def id_from_hp(hp):
                                                                  hp["learning_rate"], hp["activation"])
 
 
-def main():
+def main(argv):
     neptune_tb.integrate_with_tensorflow()
-    HP_NUM_FILTERS = [[32,32,32,32], [128, 128, 64, 32, 32]] 
-    HP_DROPOUT = [0.1, 0.2, 0.5]
-    HP_LEARNING_RATE = [0.0005, 0.0001]
-    HP_ACTIVATION = ['relu', 'tanh']
-    HP_KERNEL_SIZE = [9]
-    hparams = { "num_epochs"                    : 1000,
-                "shuffle"                       : False,
+    hparams = { "shuffle"                       : False,
                 "num_threads"                   : 2,
                 "batch_size"                    : 16384,
                 "hidden_size"                   : 256,
@@ -144,25 +146,21 @@ def main():
                 "initializer"                   : "uniform_unit_scaling",
                 "initializer_gain"              : 1.0,
                 "weight_decay"                  : 0.0,
-                "l1_regularization_strength"    : 0.001
+                "l1_regularization_strength"    : 0.001,
+                "kernel_size"                   : 9
             }
     session_num = 0
-    for filters in HP_NUM_FILTERS:
-        for dropout_rate in HP_DROPOUT:
-            for activation in HP_ACTIVATION:
-                for learning_rate in HP_LEARNING_RATE:
-                    for kernel_size in HP_KERNEL_SIZE:
-                        hparams["cnn_filters"] = filters
-                        hparams["dropout"] = dropout_rate
-                        hparams["learning_rate"] = learning_rate
-                        hparams["activation"] = activation
-                        hparams["kernel_size"] = kernel_size
-                        run_name = id_from_hp(hparams)
-                        print('--- Starting trial: %s' % run_name)
-                        print(str(hparams))
-                        session_num += 1
-                        train_and_eval(hparams, '../data/uniform_200k/', '../logs/')
+    hparams["cnn_filters"]      = [int(x) for x in FLAGS.filters]
+    hparams["dropout"]          = FLAGS.dropout
+    hparams["learning_rate"]    = FLAGS.learning_rate
+    hparams["activation"]       = FLAGS.activation
+    hparams['num_epochs']       = FLAGS.epochs
+    dataDir                     = FLAGS.data_dir
+
+    run_name = id_from_hp(hparams)
+    print('--- Starting trial: %s' % run_name)
+    train_and_eval(hparams, dataDir, dataDir + 'logs/')
 
 
 if __name__ == '__main__':
-    main()
+    app.run(main)
