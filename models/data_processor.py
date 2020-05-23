@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import sys
 import itertools
+import re
+import numpy as np
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -11,10 +13,10 @@ from absl import app
 from tqdm import tqdm
 
 rootDir = os.path.dirname(sys.argv[0])
-flags.DEFINE_string('protocol_path', os.path.join(rootDir, '../data/uniform_200k/'), 'Set a value for data source folder.')
-flags.DEFINE_string('dataset_path', os.path.join(rootDir, '../data/uniform_200k/'), 'Set a value for data destination folder.')
+flags.DEFINE_string('protocol_path', os.path.join(rootDir, '../data/1000per_simulation/'), 'Set a value for data source folder.')
+flags.DEFINE_string('dataset_path', os.path.join(rootDir, '../data/1000per_simulation/'), 'Set a value for data destination folder.')
 flags.DEFINE_integer('from_file', 1, 'Set a starting point for data processor.')
-flags.DEFINE_integer('to_file', 200, 'Set an ending point for data processor.')
+flags.DEFINE_integer('to_file', 100, 'Set an ending point for data processor.')
 flags.DEFINE_boolean('concat_raw_data', True, 'Whether to read raw outputs first'
                                               'and only then preprocess for training')
 
@@ -53,9 +55,16 @@ def process_results(path, from_file, to_file):
     all_filenames = [path + "results/protocol_results_{}.csv".format(i) for i in range(from_file, to_file + 1)]
     for file in tqdm(all_filenames, ncols=100):
         with open(file, 'r') as f:
-            for line in f:
-                line = line[:-1]                         # Erase new line
-                all_count.at[row_i, 0] = line
+            lines = f.readlines();
+            lines = [x.strip() for x in lines]
+            lines = ' '.join(lines)
+
+            matches = re.findall(r'\[\[(.*?)\]\]', lines, re.S)
+            for match in matches:
+                results = match.split(' ')
+                results = [int(x) for x in results if x]
+
+                all_count.at[row_i, 0] = np.mean(results)
                 row_i += 1
     return all_count
 

@@ -6,7 +6,7 @@ import itertools
 
 dirPath			= os.path.dirname(sys.argv[0])
 EMTDataDirPath	= os.path.join(dirPath, "../../EMT6-Ro/data/")
-dataDirPath		= os.path.join(dirPath, "../data/only_10Gy/")
+dataDirPath		= os.path.join(dirPath, "../data/1000per_simulation/")
 results			= os.path.join(dataDirPath, "results")
 protocolTimes	= os.path.join(dataDirPath, "protocols/protocol_times_{}.csv".format(sys.argv[1]))
 protocolResults	= os.path.join(dataDirPath, "results/protocol_results_{}.csv".format(sys.argv[1]))
@@ -22,7 +22,6 @@ if not os.path.exists(results):
 if os.path.exists(protocolResults):
 	os.remove(protocolResults)
 
-protocols = []
 with open(protocolTimes, 'r') as f:
 	for doses, times in itertools.zip_longest(f, f):
 		if times is None:
@@ -34,16 +33,12 @@ with open(protocolTimes, 'r') as f:
 		times.pop()
 		for i, j in enumerate (doses):
 			protocol.append((int(times[i]), float(doses[i])))
-		protocols.append(protocol)
 	
-		if len(protocols) >= 10:
-			experiment = sim.Experiment(params, [state], 100, len(protocols))
-			experiment.run(protocols)
-			res = experiment.get_results()
+		experiment = sim.Experiment(params, [state], 1000, 1)
+		experiment.run([protocol])
+		res = experiment.get_results()
 
-			with open(protocolResults, 'a') as g:
-				for i in res:
-					g.write(str(np.mean(i)))
-					g.write("\n")
-
-			protocols = []
+		with open(protocolResults, 'a') as g:
+			for i in res:
+				g.write(str(i))
+				g.write("\n")
