@@ -1,0 +1,6 @@
+[submodule "tumor-simulation-system"]
+	path = tumor-simulation-system
+	url = https://github.com/lpiekarski/tumor-simulation-system
+[submodule "simul-server"]
+	path = simul-server
+	url = https://github.com/teloniusz/simul-server
