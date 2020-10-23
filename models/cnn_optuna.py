@@ -1,20 +1,12 @@
 from keras.backend import clear_session
-from keras.datasets import mnist
 from keras.layers import Conv1D
 from keras.layers import Dense
 from keras.layers import Flatten
-from keras.models import Sequential
-from keras.optimizers import RMSprop
 import optuna
 
 import neptune
-import random
-import io
-import sys
 import numpy as np
 import tensorflow as tf
-import pandas as pd
-import matplotlib.pyplot as plt
 import neptunecontrib.monitoring.optuna as opt_utils
 
 from tensorflow.keras.layers import Input, Conv1D, Activation, BatchNormalization, MaxPooling1D, Flatten, Dense, Dropout

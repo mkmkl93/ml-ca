@@ -8,7 +8,7 @@ from absl import flags
 from absl import app
 from data_processor import read_data
 from tensorflow.keras import callbacks
-from tensorflow.keras.layers import Input, Conv1D, Activation, BatchNormalization, MaxPooling1D, Flatten, Dense, Dropout
+from tensorflow.keras.layers import Input, BatchNormalization, Flatten, Dense, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
