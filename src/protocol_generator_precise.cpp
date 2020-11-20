@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 
 	fs::path directory_path(argv[0]);
 	directory_path.remove_filename();
-	directory_path += "../data/1000per_simulation/";
+	directory_path += "../data/2000per_simulation/";
 	check_directory(directory_path);
 	directory_path += "protocols/";
 	check_directory(directory_path);
@@ -97,12 +97,12 @@ int main(int argc, char **argv) {
 	std::ofstream t;
 
 	int i = 0, file_count = 1, lastIndex = 0;
-	int numOfFiles = 100, numOfProtocols = 10000;
+	int numOfFiles = 2000, numOfProtocols = 200000;
 	int protPerFile = numOfProtocols / numOfFiles;
 	std :: cout << "Number of files: " << numOfFiles << "\n";
 	std :: cout << "Number of protocols: " << numOfProtocols << "\n";
 	while (i < numOfProtocols) {
-		if (i % protPerFile == 0) {
+		if (i % protPerFile == 0 && i != lastIndex) {
 			if (i > 0) {
 				std::cout << "Ended processing file " << file_count << " with " << i - lastIndex << " protocols\n";
 				file_count++;
