@@ -1,30 +1,30 @@
-from datetime import datetime
+import random
+import neptune
 import numpy as np
-from absl import app
-from absl import flags
-from data_processor import read_data
-from hparams import create_hparams
-from keras import callbacks
-from keras.layers import Flatten, CuDNNLSTM, TimeDistributed, LSTM
-from keras.layers import Input
-from keras.layers.core import Activation
-from keras.layers.core import Dense
-from keras.layers.core import Dropout
-from keras.models import Model
-from keras.optimizers import Adam
+import tensorflow as tf
+import neptune_tensorboard as neptune_tb
 
-flags.DEFINE_string('model_path', 'dnn_model_dir/', 'Set a value for data source folder.')
+from absl import flags
+from absl import app
+from data_processor import read_data
+from tensorflow.keras import callbacks, Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout, BatchNormalization
+from tensorflow.keras.optimizers import Adam
+
+flags.DEFINE_string('mode', 'train', 'In which mode should the program be run train/eval')
+flags.DEFINE_float('dropout', 0.2, 'Set dropout')
+flags.DEFINE_float('learning_rate', 0.0001, 'Set learning rate')
+flags.DEFINE_string('activation', 'relu', 'Set activation method')
+flags.DEFINE_string('data_dir', '../data/uniform_200k_time_delta/', 'Relative path to the data folder')
+flags.DEFINE_integer('epochs', 1, 'Number of epochs')
+flags.DEFINE_integer('lstm_filters', 1, 'Number of LSTM layers')
+flags.DEFINE_integer('lstm_filter', 256, 'Number of units in lstm')
+flags.DEFINE_integer('dense_filters', 1, 'Number of Dense layers')
+flags.DEFINE_integer('dense_filter', 256, 'Number of units in dense layer')
 FLAGS = flags.FLAGS
 
-
-def log_output(results, hparams, filepath):
-    date = str(datetime.today().strftime('%Y%m%d%H%M%S'))
-    filename = filepath + 'rnn_regressor_' + str(np.min(results['loss'])) + '_' + date + '.log'
-    with open(filename, 'w') as f:
-        f.write(str(hparams))
-        f.write('\n\n')
-        f.write(str(results))
-
+RUN_NAME = 'run_{}'.format(random.getrandbits(64))
+EXPERIMENT_LOG_DIR = 'logs/{}'.format(RUN_NAME)
 
 def input_fn(trainingset_path):
     x_train, y_train = read_data(trainingset_path, 'train')
@@ -36,90 +36,92 @@ def input_fn(trainingset_path):
     return x_train, y_train, x_eval, y_eval
 
 
-def create_rnn(input_width, hidden_sizes, classifier_dropout=0.5, activation='relu'):
+def create_lstm(hparams):
+    model = Sequential()
+    model.add(BatchNormalization())
+    
+    for _ in range(hparams['lstm_filters']):
+        model.add(LSTM(hparams['lstm_filter'], return_sequences=True))
+    model.add(LSTM(hparams['lstm_filter']))
 
-    inputs = Input(shape=(input_width,1))
-    x = inputs
-    for size in hidden_sizes[:-1]:
-        x = CuDNNLSTM(size, return_sequences=True)(x)
-    x = CuDNNLSTM(hidden_sizes[-1])(x)
-
-    x = Dense(256)(x)
-    x = Activation(activation)(x)
-    if classifier_dropout > 0:
-        x = Dropout(classifier_dropout)(x)
-    x = Dense(64)(x)
-    x = Activation(activation)(x)
-    if classifier_dropout > 0:
-        x = Dropout(classifier_dropout)(x)
-    x = Dense(16)(x)
-    x = Activation(activation)(x)
-
-    x = Dense(1, activation="linear")(x)
-
-    model = Model(inputs, x)
+    for _ in range(hparams['dense_filters']):
+        model.add(Dense(hparams['dense_filter'], activation='relu'))
+        model.add(Dropout(hparams['dropout']))
+        model.add(BatchNormalization())
 
     return model
 
+def divide(x):
+    ret = np.empty([len(x), 20, 2])
+    for i, row in enumerate(x):
+        for j in range(1, len(row)):
+            j -= 1
+            if (j - 1) % 2:
+                ret[i][(j - 1) // 2][0] = row[j + 1]
+            else:
+                ret[i][(j - 1) // 2][1] = row[j + 1]
+    
+    return ret
 
-def train_and_eval(hparams, trainingset_path, model_path):
-    path = model_path + "/" + id_from_hp(hparams)
+def train(hparams):
+    neptune.init(project_qualified_name='kowson/OLN')
+    with neptune.create_experiment(name="Recurrent neural network",
+                                   params=hparams,
+                                   tags=["CuDNNLSTM", hparams['data_dir'], "data_v2", "mse"]):
+        x_train, y_train, x_eval, y_eval = input_fn(hparams['data_dir'])
+        x_train_divided = divide(x_train)
+        x_eval_divided = divide(x_eval)
+        
+        model = create_lstm(hparams)
+        opt = Adam(lr=hparams["learning_rate"],
+                   decay=1e-3 / 200)
+        model.compile(loss=tf.keras.losses.MeanSquaredError(), optimizer=opt)
 
-    x_train, y_train, x_eval, y_eval = input_fn(trainingset_path)
+        tbCallBack = callbacks.TensorBoard(log_dir=EXPERIMENT_LOG_DIR)
 
-    model = create_rnn(x_train.shape[1],
-                       hidden_sizes=hparams.hidden_sizes,
-                       classifier_dropout=hparams.dropout,
-                       activation=hparams.activation,
-                       )
-    opt = Adam(lr=hparams.learning_rate,
-               decay=1e-3 / 200)
-    model.compile(loss="mean_squared_error", optimizer=opt)
+        checkpoint_path = EXPERIMENT_LOG_DIR
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
 
-    tbCallBack = callbacks.TensorBoard(
-        log_dir=path, histogram_freq=0,
-        write_graph=True, write_images=True)
+                                                         save_freq=11*100,
+                                                         verbose=1)
 
-    history_callback = model.fit(
-        x_train,
-        y_train,
-        validation_data=(x_eval, y_eval),
-        epochs=hparams.num_epochs,
-        batch_size=hparams.batch_size,
-        callbacks=[tbCallBack])
-
-    loss_history = history_callback.history
-
-    log_output(loss_history, hparams, path)
+        history_callback = model.fit(
+            x_train,
+            y_train,
+            validation_data=(x_eval, y_eval),
+            epochs=hparams["num_epochs"],
+            batch_size=hparams["batch_size"],
+            callbacks=[tbCallBack, cp_callback],
+            verbose=2)
 
 
-def id_from_hp(hp):
-    return "rnn_hiddens{}_cls_dropout{:.4f}_lr{}_cls_act_{}".format(hp.hidden_sizes, hp.dropout, hp.learning_rate, hp.activation)
+def create_experiment():
+    neptune_tb.integrate_with_tensorflow()
+    hyper_params = {
+            'data_dir': FLAGS.data_dir,
+            'shuffle': False,
+            'num_threads': 1,
+            'batch_size': 16384,
+            'initializer': 'uniform_unit_scaling',
+            'lstm_filters': FLAGS.lstm_filters,
+            'lstm_filter': FLAGS.lstm_filter,
+            'dense_filters': FLAGS.dense_filters,
+            'dense_filter': FLAGS.dense_filter,
+            'dropout': FLAGS.dropout,
+            'learning_rate': FLAGS.learning_rate,
+            'activation': 'relu',
+            'num_epochs': FLAGS.epochs,
+    }
+
+    print('--- Starting trial ---')
+    train(hyper_params)
 
 
 def main(argv):
-    print("Logging to " + FLAGS.model_path)
-    HP_HIDDEN_SIZES = [[32, 32, 32], [1024, 512, 256], [128, 128, 64, 32, 32], [256, 256, 256, 256, 256], [128, 64, 32]]
-    HP_CLASSIFIER_DROPOUT = [0.0, 0.001, 0.1, 0.5]
-    HP_LEARNING_RATE = [0.0005, 0.001, 0.0001]
-    HP_ACTIVATION = ['tanh', 'relu']
-    hparams = create_hparams()
-
-    session_num = 0
-
-    for sizes in HP_HIDDEN_SIZES:
-        for dropout_rate in HP_CLASSIFIER_DROPOUT:
-            for activation in HP_ACTIVATION:
-                for learning_rate in HP_LEARNING_RATE:
-                        hparams.hidden_sizes = sizes
-                        hparams.dropout = dropout_rate
-                        hparams.learning_rate = learning_rate
-                        hparams.activation = activation
-                        run_name = id_from_hp(hparams)
-                        print('--- Starting trial: %s' % run_name)
-                        print(str(hparams))
-                        session_num += 1
-                        train_and_eval(hparams, '', FLAGS.model_path)
+    if FLAGS.mode == 'train':
+        create_experiment()
+    elif FLAGS.mode == 'eval':
+        pass
 
 
 if __name__ == '__main__':
