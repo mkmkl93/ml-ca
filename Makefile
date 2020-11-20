@@ -11,4 +11,4 @@ ifneq ($(RUN_ARGS),)
 endif
 
 go:
-	srun -p gpu -A GR79-29 --gres=gpu:1 -c 18 --ntasks-per-node=1 ${RUN_ARGS} --pty bash -l
+	srun -p gpu -A GR79-29 --gres=gpu:1 -c 11 --ntasks-per-node=1 ${RUN_ARGS} --pty bash -l
