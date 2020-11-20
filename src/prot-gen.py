@@ -3,10 +3,11 @@ import numpy as np
 import sys
 import os
 import itertools
+import time
 
 dirPath			= os.path.dirname(sys.argv[0])
 EMTDataDirPath	= os.path.join(dirPath, "../../EMT6-Ro/data/")
-dataDirPath		= os.path.join(dirPath, "../data/1000per_simulation/")
+dataDirPath		= os.path.join(dirPath, "../data/2000per_simulation/")
 results			= os.path.join(dataDirPath, "results")
 protocolTimes	= os.path.join(dataDirPath, "protocols/protocol_times_{}.csv".format(sys.argv[1]))
 protocolResults	= os.path.join(dataDirPath, "results/protocol_results_{}.csv".format(sys.argv[1]))
@@ -34,11 +35,17 @@ with open(protocolTimes, 'r') as f:
 		for i, j in enumerate (doses):
 			protocol.append((int(times[i]), float(doses[i])))
 	
-		experiment = sim.Experiment(params, [state], 1000, 1)
+		experiment = sim.Experiment(params, [state], 2000, 1)
+		
 		experiment.run([protocol])
+		start_time = time.time()
+		
 		res = experiment.get_results()
+		end_time = time.time()
+		print(end_time - start_time)
 
 		with open(protocolResults, 'a') as g:
 			for i in res:
-				g.write(str(i))
-				g.write("\n")
+				for j in i:
+					g.write('[' + ', '.join(str(x) for x in j) + ']')
+					g.write("\n")

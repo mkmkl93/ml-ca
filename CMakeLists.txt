@@ -47,11 +47,6 @@ add_executable(tests
         ${SOURCES}
         )
 
-add_executable(run-simple
-        src/simple-run.cpp
-        ${SOURCES}
-        )
-
 add_executable(protocol_generator
         src/protocol_generator.cpp
         )
