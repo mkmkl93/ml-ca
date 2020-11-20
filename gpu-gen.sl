@@ -11,7 +11,7 @@
 #SBATCH --mail-user=mkmkl93@gmail.com
 #SBATCH	--mail-type=ALL
 #SBATCH	--mem=90000
-
+#SBATCH --nodelist=rysy-n6
 
 module load gpu/cuda/10.2 common/compilers/gcc/8.3.1
 python3 ~/nasze-ca/src/prot-gen.py ${SLURM_ARRAY_TASK_ID}
